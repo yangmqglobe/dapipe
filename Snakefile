@@ -21,6 +21,7 @@ rule all:
             config['workspace'] + '/aggregate/all_sample_pcaplot.{fmt}',
             fmt=config['plot_formats']
         ),
+        config['workspace'] + '/aggregate/all_uniq_peaks_annotated.bed',
         expand(
             config['workspace'] + '/comparisons/{comparison}/{comparison}_result.txt',
             comparison=config['comparisons']

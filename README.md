@@ -11,7 +11,7 @@
 ```bash
 conda create -n dapipe
 conda activate dapipe
-conda install --file environment.yaml
+conda install --file environment.yml
 ```
 
 ## 运行流程
