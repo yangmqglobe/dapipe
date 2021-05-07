@@ -6,12 +6,12 @@
 
 ## 依赖安装
 
-使用conda自动安装所有依赖
+使用mamba自动安装所有依赖（conda的加速替代）
 
 ```bash
-conda create -n dapipe
+conda install -n base -c conda-forge mamba
+mamba env create -f environment.yml
 conda activate dapipe
-conda install --file environment.yml
 ```
 
 ## 运行流程
