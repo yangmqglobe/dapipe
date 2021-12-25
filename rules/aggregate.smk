@@ -68,7 +68,7 @@ rule merge_counts:
             pd.read_table(file, usecols=[3, 6], names=['peak', name], index_col=0, squeeze=True)
             for name, file in zip(params.names, input.counts)
         ]
-        counts = pd.concat(counts, axis=1)
+        counts = pd.concat(counts, axis=1).fillna(0).astype(int)
         counts.to_csv(output.raw, sep='\t', index_label='')
 
         peaks = pd.read_table(

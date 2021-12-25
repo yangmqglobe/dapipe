@@ -42,7 +42,17 @@ rule callpeak:
         name='{sample}'
     shell:
         'macs2 callpeak -t {input} -f BED -g {params.genome_size} --keep-dup all --outdir {params.outdir}'
-        ' -n {params.name} -B --SPMR --nomodel --shift -75 --extsize 150 --nolambda --max-gap 250 2>{log}'
+        ' -n {params.name} -B --SPMR --nomodel --shift -75 --extsize 150 --nolambda --call-summits --max-gap 250 2>{log}'
+
+
+rule narrowPeak2bed:
+    output:
+        narrowPeak=config['workspace'] + '/samples/{sample}/callpeak/{sample}_peaks.bed'
+    input:
+        rules.callpeak.output.narrowPeak
+    shell:
+        'awk \'BEGIN {{OFS="\\t"}}{{print $1,$2,$3,$4,$5}}\' {input} > {output}'
+        ' && bedSort {output} {output}'
 
 
 rule bdg_clip:

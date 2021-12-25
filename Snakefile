@@ -13,6 +13,10 @@ include: 'rules/comparison.smk'
 rule all:
     input:
         expand(
+            config['workspace'] + '/samples/{sample}/callpeak/{sample}_peaks.bed',
+            sample=config['samples']
+        ),
+        expand(
             config['workspace'] + '/samples/{sample}/callpeak/{sample}_treat_pileup.bw',
             sample=config['samples']
         ),
