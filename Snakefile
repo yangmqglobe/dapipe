@@ -8,6 +8,7 @@ include: 'rules/mapping.smk'
 include: 'rules/callpeak.smk'
 include: 'rules/aggregate.smk'
 include: 'rules/comparison.smk'
+include: 'rules/qc.smk'
 
 
 BASE_DIR = os.path.dirname(workflow.snakefile)
@@ -15,6 +16,10 @@ BASE_DIR = os.path.dirname(workflow.snakefile)
 
 rule basic_all:
     input:
+        expand(
+            config['workspace'] + '/samples/{sample}/qc/align_summary.txt',
+            sample=config['samples']
+        ),
         expand(
             config['workspace'] + '/samples/{sample}/callpeak/{sample}_peaks.bed',
             sample=config['samples']

@@ -20,7 +20,7 @@ rule mapping:
         rg='\'@RG\\tID:{library}\\tSM:{sample}\\tLB:{library}\\tPL:ILLUMINA\'',
         index=config['genome']['bwa_index'],
         tmp=config['workspace'] + '/samples/{sample}/mapping/{library}.tmp',
-    threads: 8 if workflow.cores > 8 else workflow.cores
+    threads: 8 if workflow.cores >= 8 else workflow.cores
     shell:
         'bwa mem -t {threads} -R {params.rg} {params.index} {input.fq1} {input.fq2} 2>{log.bwa}'
         ' | samblaster 2>{log.samblaster}'
