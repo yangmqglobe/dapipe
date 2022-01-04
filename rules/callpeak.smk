@@ -14,7 +14,7 @@ rule cutsites:
         index=rules.index.output,
         bed=rules.clean_bed.output
     params:
-        script=os.path.dirname(workflow.snakefile) + '/tools/cutsites.py'
+        script=lambda wildcards: BASE_DIR + '/tools/cutsites.py'
     shell:
         'python {params.script} -L {input.bed} {input.bam} {output}'
 

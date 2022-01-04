@@ -39,7 +39,7 @@ rule compare:
         rules.plan.output,
         rules.merge_counts.output.raw
     params:
-        script=os.path.dirname(workflow.snakefile) + '/tools/compare.R'
+        script=lambda wildcards: BASE_DIR +  '/tools/compare.R'
     shell:
         'Rscript {params.script} {input} {output}'
         

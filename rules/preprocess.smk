@@ -10,7 +10,7 @@ def get_adapter(wildcards):
     if 'adapter' in config:
         return config['adapter']
     else:
-        return os.path.dirname(workflow.snakefile) + '/resources/adapter.fa'
+        return  f'{BASE_DIR}/resources/adapter.fa'
 
 
 rule trim:

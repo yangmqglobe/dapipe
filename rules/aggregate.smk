@@ -25,7 +25,7 @@ rule annotate:
         rules.merge_peaks.output,
         config['genome']['txdb']
     params:
-        script=os.path.dirname(workflow.snakefile) + '/tools/annotate.R'
+        script=lambda wildcards: BASE_DIR + '/tools/annotate.R'
     shell:
         'Rscript {params.script} {input} {output}'
 
@@ -137,6 +137,6 @@ rule pcaplot:
         rules.comparisons.output,
         rules.merge_counts.output.qnorm
     params:
-        script=os.path.dirname(workflow.snakefile) + '/tools/pcaplot.R'
+        script=lambda wildcards: BASE_DIR +  '/tools/pcaplot.R'
     shell:
         'Rscript {params.script} {input} {output}'
