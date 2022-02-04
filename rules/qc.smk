@@ -16,7 +16,7 @@ rule promoters:
         'Rscript {params.script} {input} {output}'
 
 
-rule fragment_sizes:
+rule fragmentsizes:
     output:
         config['workspace'] + '/samples/{sample}/qc/{sample}_fragment_sizes_counts.txt'
     input:
@@ -24,9 +24,13 @@ rule fragment_sizes:
         index=rules.index.output,
         bed=rules.clean_bed.output
     params:
-        script=lambda wildcards: BASE_DIR + '/tools/fragmentsizes.py'
+        script=lambda wildcards: BASE_DIR + '/tools/fragmentsizes.py',
+        include=lambda wildcards: config['filter']['include'],
+        exclude=lambda wildcards: config['filter']['exclude'],
+        mapq=lambda wildcards: config['filter']['mapq']
     shell:
-        'python {params.script} -L {input.bed} {input.bam} {output}'
+        'python {params.script} -f {params.include} -F {params.exclude} -q {params.mapq}'
+        ' -L {input.bed} {input.bam} {output}'
 
 
 rule qc:

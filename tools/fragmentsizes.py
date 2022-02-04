@@ -64,12 +64,14 @@ def main():
         '-f',
         dest='include',
         help='only include reads with all  of the FLAGs in INT present',
-        default=2)
+        default=2,
+        type=int)
     parser.add_argument(
         '-F',
         dest='exclude',
         help='only include reads with none of the FLAGS in INT present',
-        default=1028)
+        default=1028,
+        type=int)
     parser.add_argument('-q',
                         dest='mapq',
                         help='only include reads with mapping quality >= INT',

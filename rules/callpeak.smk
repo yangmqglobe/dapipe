@@ -14,9 +14,13 @@ rule cutsites:
         index=rules.index.output,
         bed=rules.clean_bed.output
     params:
-        script=lambda wildcards: BASE_DIR + '/tools/cutsites.py'
+        script=lambda wildcards: BASE_DIR + '/tools/cutsites.py',
+        include=lambda wildcards: config['filter']['include'],
+        exclude=lambda wildcards: config['filter']['exclude'],
+        mapq=lambda wildcards: config['filter']['mapq']
     shell:
-        'python {params.script} -L {input.bed} {input.bam} {output}'
+        'python {params.script} -f {params.include} -F {params.exclude} -q {params.mapq}'
+        ' -L {input.bed} {input.bam} {output}'
 
 
 rule sort_cutsites:

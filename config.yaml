@@ -12,6 +12,12 @@ genome:
 # adapter fasta file, comment this line will use Nextera adapter comes with dapipe
 adapter: /home/andy/Projects/dapipe/src/dapipe/resources/adapter.fa
 
+# reads filter
+filter:
+  include: 2
+  exclude: 1028
+  mapq: 10
+
 # output plots formats
 plot_formats:
   - pdf
