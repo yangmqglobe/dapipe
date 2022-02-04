@@ -16,6 +16,19 @@ rule promoters:
         'Rscript {params.script} {input} {output}'
 
 
+rule fragment_sizes:
+    output:
+        config['workspace'] + '/samples/{sample}/qc/{sample}_fragment_sizes_counts.txt'
+    input:
+        bam=rules.merge_bam.output,
+        index=rules.index.output,
+        bed=rules.clean_bed.output
+    params:
+        script=lambda wildcards: BASE_DIR + '/tools/fragmentsizes.py'
+    shell:
+        'python {params.script} -L {input.bed} {input.bam} {output}'
+
+
 rule qc:
     output:
         config['workspace'] + '/samples/{sample}/qc/align_summary.txt'

@@ -21,6 +21,10 @@ rule basic_all:
             sample=config['samples']
         ),
         expand(
+            config['workspace'] + '/samples/{sample}/qc/{sample}_fragment_sizes_counts.txt',
+            sample=config['samples']
+        ),
+        expand(
             config['workspace'] + '/samples/{sample}/callpeak/{sample}_peaks.bed',
             sample=config['samples']
         ),
