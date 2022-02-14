@@ -90,7 +90,7 @@ rule promoters:
 
 rule promoter_reads:
     output:
-        temp(config['workspace'] + '/samples/{sample}/{sample}_promoter_reads.json')
+        temp(config['workspace'] + '/samples/{sample}/qc/{sample}_promoter_reads.json')
     input:
         bam=rules.merge_bam.output,
         index=rules.index.output,
@@ -109,6 +109,22 @@ rule promoter_reads:
             json.dump({'promoter_reads': int(promoter)}, f)
 
 
+rule peak_reads:
+    output:
+        temp(config['workspace'] + '/samples/{sample}/qc/{sample}_peak_reads.json')
+    input:
+        cutsites=rules.sort_cutsites.output,
+        peaks=rules.narrowPeak2bed.output
+    run:
+        stdout = shell(
+            f'bedtools intersect -wa -u -a {input.cutsites} -b {input.peaks} | wc -l',
+            iterable=True
+        )
+        peak = ''.join(stdout)
+        with open(output[0], 'w') as f:
+            json.dump({'peak_reads': int(peak)}, f)
+
+
 def load_json(filename):
     with open(filename, 'r') as f:
         return json.load(f)
@@ -123,7 +139,8 @@ rule qc:
         dup=rules.dup_reads.output,
         chrm=rules.chrM_reads.output,
         clean=rules.clean_reads.output,
-        promoter=rules.promoter_reads.output
+        promoter=rules.promoter_reads.output,
+        peak=rules.peak_reads.output
     run:
         # collect results
         total = load_json(input[0])
@@ -132,10 +149,17 @@ rule qc:
         chrm = load_json(input[3])
         clean = load_json(input[4])
         promoter = load_json(input[5])
+        peak = load_json(input[6])
 
-        qc = total | mapped | dup | chrm | clean | promoter
+        qc = total | mapped | dup | chrm | clean | promoter | peak
 
         qc = pd.Series(qc, name='counts').to_frame()
+        
+        qc['base'] = total['total_reads']
+        qc.loc[
+            ['promoter_reads', 'peak_reads'], 'base'
+        ] = clean['clean_reads']
+        
         qc['frac'] = qc['counts'] / total['total_reads']
 
         qc.to_csv(output[0], sep='\t', header=False)
