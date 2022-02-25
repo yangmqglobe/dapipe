@@ -17,11 +17,11 @@ BASE_DIR = os.path.dirname(workflow.snakefile)
 rule basic_all:
     input:
         expand(
-            config['workspace'] + '/samples/{sample}/qc/align_summary.txt',
+            config['workspace'] + '/samples/{sample}/qc/{sample}_qc.josn',
             sample=config['samples']
         ),
         expand(
-            config['workspace'] + '/samples/{sample}/qc/{sample}_fragment_sizes_counts.txt',
+            config['workspace'] + '/samples/{sample}/qc/{sample}_qc.html',
             sample=config['samples']
         ),
         expand(

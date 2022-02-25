@@ -5,6 +5,7 @@
 # time: 2021/02/16
 from argparse import ArgumentParser
 from collections import Counter
+import json
 
 import pysam
 
@@ -47,11 +48,12 @@ def run(in_bam, out, regions=None, include=2, exclude=1024, mapq=10):
     counts = Counter()
     for fl in fetch_fragment_lens(in_bam, regions, include, exclude, mapq):
         counts[fl] += 1
+    counts = [{'size': size, 'count': count} for size, count in counts.items()]
+    counts = sorted(counts, key=lambda x: x['size'])
 
     # output
     with open(out, 'w') as f:
-        for value, count in counts.most_common():
-            f.write(f'{value}\t{count}\n')
+        json.dump({'fragment_sizes': counts}, f)
 
 
 def main():
@@ -78,9 +80,7 @@ def main():
                         default=10,
                         type=int)
     parser.add_argument('<in_bam>', help='input bam file')
-    parser.add_argument(
-        '<out>',
-        help='output file, first columns is fragment length, second is counts')
+    parser.add_argument('<out>', help='output json file')
     args = vars(parser.parse_args())
     run(args['<in_bam>'], args['<out>'], args['regions'], args['include'],
         args['exclude'], args['mapq'])

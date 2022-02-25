@@ -4,7 +4,10 @@
 # file: qc.smk
 # time: 2022/01/04
 import json
+import re
+import os
 
+from jinja2 import Environment, FileSystemLoader
 import pysam
 import pandas as pd
 
@@ -125,49 +128,9 @@ rule peak_reads:
             json.dump({'peak_reads': int(peak)}, f)
 
 
-def load_json(filename):
-    with open(filename, 'r') as f:
-        return json.load(f)
-
-
-rule qc:
-    output:
-        config['workspace'] + '/samples/{sample}/qc/align_summary.txt'
-    input:
-        total=rules.total_reads.output,
-        mapped=rules.mapped_reads.output,
-        dup=rules.dup_reads.output,
-        chrm=rules.chrM_reads.output,
-        clean=rules.clean_reads.output,
-        promoter=rules.promoter_reads.output,
-        peak=rules.peak_reads.output
-    run:
-        # collect results
-        total = load_json(input[0])
-        mapped = load_json(input[1])
-        dup = load_json(input[2])
-        chrm = load_json(input[3])
-        clean = load_json(input[4])
-        promoter = load_json(input[5])
-        peak = load_json(input[6])
-
-        qc = total | mapped | dup | chrm | clean | promoter | peak
-
-        qc = pd.Series(qc, name='counts').to_frame()
-        
-        qc['base'] = total['total_reads']
-        qc.loc[
-            ['promoter_reads', 'peak_reads'], 'base'
-        ] = clean['clean_reads']
-        
-        qc['frac'] = qc['counts'] / total['total_reads']
-
-        qc.to_csv(output[0], sep='\t', header=False)
-
-
 rule fragment_sizes:
     output:
-        config['workspace'] + '/samples/{sample}/qc/{sample}_fragment_sizes_counts.txt'
+        config['workspace'] + '/samples/{sample}/qc/{sample}_fragment_sizes_counts.json'
     input:
         bam=rules.merge_bam.output,
         index=rules.index.output,
@@ -180,3 +143,99 @@ rule fragment_sizes:
     shell:
         'python {params.script} -f {params.include} -F {params.exclude} -q {params.mapq}'
         ' -L {input.bed} {input.bam} {output}'
+
+
+def load_json(filename):
+    filename = str(filename)
+    with open(filename, 'r') as f:
+        return json.load(f)
+
+
+def grouped_int(value):
+    return f'{value:,}'
+
+
+def percentage(value):
+    return f'{value:.2%}'
+
+
+def get_template():
+    env = Environment(loader=FileSystemLoader(f'{BASE_DIR}/tools'))
+    env.filters['grouped_int'] = grouped_int
+    env.filters['percentage'] = percentage
+    return env.get_template('qctemplate.html')
+
+
+def get_all_library_qc(wildcards):
+    return [
+        config['workspace'] + f'/samples/{wildcards.sample}/qc/{library}_fastp.json'
+        for library in config['samples'][wildcards.sample]['fastq']
+    ]
+
+
+def read_library_qc(filename):
+    filename = str(filename)
+    library = re.match(r'^(.+?)_fastp.json$', os.path.basename(filename)).group(1)
+    with open(filename) as f:
+        data = json.load(f)
+    return {
+        'library' : library,
+        'total_reads': data['summary']['before_filtering']['total_reads'],
+        'pass_reads': data['summary']['after_filtering']['total_reads'],
+        'total_bases': data['summary']['before_filtering']['total_bases'],
+        'pass_bases': data['summary']['after_filtering']['total_bases'],
+        'total_q20_bases': data['summary']['before_filtering']['q20_bases'],
+        'pass_q20_bases': data['summary']['after_filtering']['q20_bases'],
+        'total_q30_bases': data['summary']['before_filtering']['q30_bases'],
+        'pass_q30_bases': data['summary']['after_filtering']['q30_bases'],
+        'pass_gc_content': data['summary']['after_filtering']['gc_content']
+    }
+
+
+rule qc:
+    output:
+        config['workspace'] + '/samples/{sample}/qc/{sample}_qc.josn',
+        config['workspace'] + '/samples/{sample}/qc/{sample}_qc.html'
+    input:
+        fastp=get_all_library_qc,
+        total=rules.total_reads.output,
+        mapped=rules.mapped_reads.output,
+        dup=rules.dup_reads.output,
+        chrm=rules.chrM_reads.output,
+        clean=rules.clean_reads.output,
+        promoter=rules.promoter_reads.output,
+        peak=rules.peak_reads.output,
+        fragment_sizes=rules.fragment_sizes.output
+    params:
+        template_dir=lambda wildcards: BASE_DIR + '/tools'
+    run:
+        # collect sequencing results
+        sequencing = [read_library_qc(library) for library in input.fastp]
+
+        # collect align results
+        total = load_json(input.total)
+        mapped = load_json(input.mapped)
+        dup = load_json(input.dup)
+        chrm = load_json(input.chrm)
+        clean = load_json(input.clean)
+        promoter = load_json(input.promoter)
+        peak = load_json(input.peak)
+        fragment_sizes = load_json(input.fragment_sizes)
+
+        align = total | mapped | dup | chrm | clean | promoter | peak | fragment_sizes
+        
+        qc = {
+            'sample': wildcards.sample,
+            'sequencing': sequencing,
+            'align': align
+        }
+
+        # write json
+        with open(output[0], 'w') as f:
+            json.dump(qc, f)
+        # render report
+        template = get_template()
+        report = template.render(qc=qc)
+
+        with open(output[1], 'w') as f:
+            f.write(report)

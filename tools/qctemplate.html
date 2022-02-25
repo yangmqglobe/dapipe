@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <title>{{ qc.sample }} QC Report</title>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <link href="https://unpkg.com/sanitize.css" rel="stylesheet" />
+    <link
+      href="https://unpkg.com/sanitize.css/typography.css"
+      rel="stylesheet"
+    />
+    <style>
+      html {
+        background-color: #eee;
+        padding: 0 calc(50% - 25rem);
+      }
+
+      body {
+        background-color: #fff;
+        min-height: 100vh;
+      }
+
+      @media (max-width: 639px) {
+        body {
+          padding: 10%;
+        }
+      }
+
+      @media (min-width: 640px) {
+        body {
+          padding: 4rem;
+        }
+      }
+
+      pre {
+        background-color: #f8f8f8;
+        color: #333;
+        overflow-y: scroll;
+        padding: 0.75em 0.625em;
+      }
+
+      h2 {
+        box-shadow: 0 -0.5rem 0 0 rgba(0, 0, 0, 0.1);
+        font-size: 1.5rem;
+        margin-top: 2rem;
+        padding-top: 2rem;
+      }
+
+      h3 {
+        font-size: 1.125rem;
+        margin-top: 1.5rem;
+      }
+
+      td {
+        border: 1px solid #dddddd;
+        padding: 5px;
+      }
+
+      table {
+        border: 1px solid #999999;
+        padding: 2x;
+        border-collapse: collapse;
+        width: 100%;
+      }
+
+      .col1 {
+        width: 30%;
+        font-weight: bold;
+        text-align: right;
+      }
+
+      .seprow {
+        border-top: 2px double #999999;
+      }
+    </style>
+    <script src="https://cdn.jsdelivr.net/npm/echarts@5.3.0/dist/echarts.min.js"></script>
+  </head>
+
+  <body>
+    <header>
+      <h1>{{ qc.sample }} QC Report</h1>
+    </header>
+
+    <main>
+      <section>
+        <h2>Sequencing</h2>
+
+        {% for library in qc.sequencing %}
+          <ul>
+            <h3>library: {{ library.library }}</h3>
+            <table>
+              <tbody>
+                <tr>
+                  <td class="col1">Total Reads:</td>
+                  <td>{{ library.total_reads | grouped_int }} ({{ (library.total_reads / library.total_reads) | percentage }})</td>
+                </tr>
+                <tr>
+                  <td class="col1">Pass Filter Reads:</td>
+                  <td>{{ library.pass_reads | grouped_int }} ({{ (library.pass_reads / library.total_reads) | percentage }})</td>
+                </tr>
+                <tr class="seprow">
+                  <td class="col1">Total Bases:</td>
+                  <td>{{ library.total_bases | grouped_int }} ({{ (library.total_bases / library.total_bases) | percentage }})</td>
+                </tr>
+                <tr>
+                  <td class="col1">Pass Filter Bases:</td>
+                  <td>{{ library.pass_bases | grouped_int }} ({{ (library.pass_bases / library.total_bases) | percentage }})</td>
+                </tr>
+                <tr>
+                  <td class="col1">Total Q20 Bases:</td>
+                  <td>{{ library.total_q20_bases | grouped_int }} ({{ (library.total_q20_bases / library.total_bases) | percentage }})</td>
+                </tr>
+                <tr>
+                  <td class="col1">Pass Filter Q20 Bases:</td>
+                  <td>{{ library.pass_q20_bases | grouped_int }} ({{ (library.pass_q20_bases / library.total_bases) | percentage }})</td>
+                </tr>
+                <tr>
+                  <td class="col1">Total Q30 Bases:</td>
+                  <td>{{ library.total_q30_bases | grouped_int }} ({{ (library.total_q30_bases / library.total_bases) | percentage }})</td>
+                </tr>
+                <tr>
+                  <td class="col1">Pass Filter Q30 Bases:</td>
+                  <td>{{ library.pass_q30_bases | grouped_int }} ({{ (library.pass_q30_bases / library.total_bases) | percentage }})</td>
+                </tr>
+              </tbody>
+            </table>
+          </ul>
+        {% endfor %}
+
+      </section>
+
+      <section>
+        <h2>Alignment</h2>
+
+        <table>
+          <tbody>
+            <tr>
+              <td class="col1">Total Reads:</td>
+              <td>{{ qc.align.total_reads | grouped_int }} ({{ (qc.align.total_reads / qc.align.total_reads) | percentage }})</td>
+            </tr>
+            <tr>
+              <td class="col1">Mapped Reads:</td>
+              <td>{{ qc.align.mapped_reads | grouped_int }} ({{ (qc.align.mapped_reads / qc.align.total_reads) | percentage }})</td>
+            </tr>
+            <tr>
+              <td class="col1">Duplication Reads:</td>
+              <td>{{ qc.align.dup_reads | grouped_int }} ({{ (qc.align.dup_reads / qc.align.total_reads) | percentage }})</td>
+            </tr>
+            <tr>
+              <td class="col1">Mitochondria Reads:</td>
+              <td>{{ qc.align.chrM_reads | grouped_int }} ({{ (qc.align.chrM_reads / qc.align.total_reads) | percentage }})</td>
+            </tr>
+            <tr>
+              <td class="col1">Clean Reads:</td>
+              <td>{{ qc.align.clean_reads | grouped_int }} ({{ (qc.align.clean_reads / qc.align.total_reads) | percentage }})</td>
+            </tr>
+            <tr>
+              <td class="col1">Promoter Reads:</td>
+              <td>{{ qc.align.promoter_reads | grouped_int }} ({{ (qc.align.promoter_reads / qc.align.total_reads) | percentage }})</td>
+            </tr>
+          </tbody>
+        </table>
+
+        <div id="fragmentSizes" style="height:400px;margin-top:1.5em;"></div>
+        <script type="text/javascript">
+          var fragmentSizes = {{ qc.align.fragment_sizes | tojson }};
+        </script>
+        <script type="text/javascript">
+          var fragmentSizesOptions = {
+            dataset: {source: fragmentSizes},
+            series: [
+              {
+                type: 'line',
+                encode: {x: 'size', y: 'count'},
+                symbol: 'none'
+              }
+            ],
+            xAxis: {},
+            yAxis: {},
+            title: {text: 'Fragment Sizes Distribution'},
+            tooltip: {trigger: 'axis'}
+          };
+
+          var fragmentSizesPlot = echarts.init(document.getElementById('fragmentSizes'));
+          fragmentSizesPlot.setOption(fragmentSizesOptions);
+        </script>
+
+      </section>
+
+    </main>
+  </body>
+</html>
