@@ -1,4 +1,4 @@
-# dapipe
+**dapipe** 是一个自动化的 ATAC-Seq 分析流程，在完成配置后，可以自动进行可复现、高并行的 ATAC-Seq 数据分析分析。
 
 ## 流程总览
 
@@ -6,10 +6,9 @@
 
 ## 依赖安装
 
-使用mamba自动安装所有依赖（conda的加速替代）
+使用 [mamba](https://mamba.readthedocs.io/) 自动安装所有依赖
 
 ```bash
-conda install -n base -c conda-forge mamba
 mamba env create -f environment.yml
 conda activate dapipe
 ```
@@ -30,4 +29,4 @@ cp dapipe/config.yaml .
 snakemake --snakefile dapipe/Snakefile -j 10 --configfile config.yaml
 ```
 
-其中的`-j`是允许流程使用的最大进程数。
+其中的`-j`是允许流程使用的最大进程数，更多参数参考 [snakemake 官方文档](https://snakemake.readthedocs.io/en/stable/executing/cli.html)。
